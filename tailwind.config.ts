@@ -18,6 +18,10 @@ export default {
 			}
 		},
 		extend: {
+			fontFamily: {
+				sans: ['Inter', 'sans-serif'],
+				heading: ['Poppins', 'sans-serif'],
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -52,6 +56,18 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+        // Custom colors for She-Invest Bloom
+        bloom: {
+          purple: {
+            light: '#9b87f5',
+            DEFAULT: '#7E69AB',
+            dark: '#6E59A5',
+          },
+          teal: '#33C3F0',
+          coral: '#FEC6A1',
+          peach: '#FDE1D3',
+          softPurple: '#E5DEFF',
+        },
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
