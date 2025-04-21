@@ -123,7 +123,7 @@ const SchemeSearch = () => {
                         <SelectValue placeholder="Category" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Categories</SelectItem>
+                        <SelectItem value="all">All Categories</SelectItem>
                         <SelectItem value="Entrepreneurship">Entrepreneurship</SelectItem>
                         <SelectItem value="Savings">Savings</SelectItem>
                         <SelectItem value="Education">Education</SelectItem>
