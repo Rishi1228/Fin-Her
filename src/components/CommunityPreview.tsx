@@ -71,7 +71,7 @@ const CommunityPreview = () => {
               Join thousands of women who are building wealth, sharing knowledge, and supporting each other.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Button className="bg-white text-bloom-purple hover:bg-gray-100 text-lg px-8">
+              <Button className="bg-white text-bloom-purple hover:bg-white/10 text-lg px-8">
                 Join Community
               </Button>
               <Button variant="outline" className="bg-white text-bloom-purple hover:bg-white/10 text-lg px-8">
