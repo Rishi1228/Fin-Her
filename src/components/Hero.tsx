@@ -1,11 +1,9 @@
-
 import React from "react";
 import { Button } from "./ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Hero = () => {
   const isMobile = useIsMobile();
-
   return (
     <section className="bg-gradient-to-r from-bloom-softPurple to-white py-4 sm:py-6 md:py-8 min-h-[85vh] flex items-center overflow-hidden">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
@@ -31,7 +29,6 @@ const Hero = () => {
               </Button>
             </div>
           </div>
-
           <div className="md:w-1/2 mt-4 md:mt-0 flex justify-center">
             <div className="relative w-full h-[200px] xs:h-[250px] sm:h-[300px] md:h-[350px] max-w-md md:max-w-full">
               {/* Decorative Circles */}
@@ -41,7 +38,7 @@ const Hero = () => {
               <img
                 src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80"
                 alt="Women supporting each other financially"
-                className="rounded-2xl shadow-xl object-cover w-full h-full relative z-10"
+                className="rounded-2xl shadow-xl object-cover w-full h-full inset-0 absolute z-10"
               />
             </div>
           </div>
