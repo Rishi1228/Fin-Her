@@ -18,6 +18,9 @@ export default {
 			}
 		},
 		extend: {
+			screens: {
+				'xs': '475px', // Added extra small breakpoint
+			},
 			fontFamily: {
 				sans: ['Inter', 'sans-serif'],
 				heading: ['Poppins', 'sans-serif'],
