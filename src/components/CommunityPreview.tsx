@@ -74,7 +74,7 @@ const CommunityPreview = () => {
               <Button className="bg-white text-bloom-purple hover:bg-gray-100 text-lg px-8">
                 Join Community
               </Button>
-              <Button variant="outline" className="border-white text-bloom-purple hover:bg-white/10 text-lg px-8">
+              <Button variant="outline" className="bg-white text-bloom-purple hover:bg-white/10 text-lg px-8">
                 Learn More
               </Button>
             </div>
