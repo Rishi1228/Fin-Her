@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -7,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, FileCheck, FileText } from "lucide-react";
+import { Search, FileCheck, FileText, Upload } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/sonner";
+import DocumentUploader from "@/components/DocumentUploader";
+import DocumentVerifier from "@/components/DocumentVerifier";
 
 // Mock data for schemes
 const SCHEMES = [
@@ -106,6 +108,9 @@ const Schemes = () => {
   const [activeTab, setActiveTab] = useState("search");
   const [selectedScheme, setSelectedScheme] = useState<any>(null);
   const [availableDocuments, setAvailableDocuments] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [verificationStatus, setVerificationStatus] = useState<"idle" | "verifying" | "complete">("idle");
+  const [verificationResults, setVerificationResults] = useState<any>(null);
 
   const handleSearch = () => {
     const filtered = SCHEMES.filter((scheme) => {
@@ -134,6 +139,45 @@ const Schemes = () => {
     } else {
       setAvailableDocuments([...availableDocuments, document]);
     }
+  };
+
+  const handleFileUpload = (files: File[]) => {
+    setUploadedFiles(prev => [...prev, ...files]);
+    toast.success(`${files.length} document${files.length > 1 ? 's' : ''} uploaded successfully`);
+  };
+
+  const handleVerifyDocuments = async () => {
+    if (uploadedFiles.length === 0 || !selectedScheme) {
+      toast.error("Please upload documents and select a scheme first");
+      return;
+    }
+    
+    setVerificationStatus("verifying");
+    
+    // Simulate AI verification process
+    setTimeout(() => {
+      const requiredDocs = selectedScheme.documents;
+      const results = {
+        verified: true,
+        matchedDocuments: uploadedFiles.map((file, index) => ({
+          fileName: file.name,
+          matched: requiredDocs[index % requiredDocs.length],
+          valid: Math.random() > 0.3
+        }))
+      };
+      
+      setVerificationResults(results);
+      setVerificationStatus("complete");
+      
+      // Update available documents based on verification
+      const validDocs = results.matchedDocuments
+        .filter(doc => doc.valid)
+        .map(doc => doc.matched);
+        
+      setAvailableDocuments(validDocs);
+      
+      toast.success("Document verification completed");
+    }, 2000);
   };
 
   const getDocumentStatus = () => {
@@ -175,26 +219,26 @@ const Schemes = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
       
-      <main className="flex-grow py-8">
-        <div className="max-w-7xl mx-auto px-6 md:px-10">
-          <div className="text-center mb-12">
-            <h1 className="font-heading font-bold text-3xl md:text-5xl text-bloom-purple-dark mb-4">
+      <main className="flex-grow py-6 md:py-8">
+        <div className="max-w-7xl mx-auto px-4 md:px-10">
+          <div className="text-center mb-8 md:mb-12">
+            <h1 className="font-heading font-bold text-2xl sm:text-3xl md:text-5xl text-bloom-purple-dark mb-3 md:mb-4">
               Government Schemes for Women
             </h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
               Find and apply for government schemes designed to support women's financial growth, 
               education, healthcare, and entrepreneurship.
             </p>
           </div>
           
           <Tabs defaultValue="search" value={activeTab} onValueChange={setActiveTab} className="w-full max-w-5xl mx-auto">
-            <TabsList className="grid w-full grid-cols-2 mb-8">
-              <TabsTrigger value="search" className="text-lg py-3">
-                <Search className="mr-2 h-5 w-5" />
+            <TabsList className="grid w-full grid-cols-2 mb-6 md:mb-8">
+              <TabsTrigger value="search" className="text-base md:text-lg py-2 md:py-3">
+                <Search className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                 Search Schemes
               </TabsTrigger>
-              <TabsTrigger value="documents" className="text-lg py-3">
-                <FileCheck className="mr-2 h-5 w-5" />
+              <TabsTrigger value="documents" className="text-base md:text-lg py-2 md:py-3">
+                <FileCheck className="mr-2 h-4 w-4 md:h-5 md:w-5" />
                 Document Verification
               </TabsTrigger>
             </TabsList>
@@ -341,73 +385,107 @@ const Schemes = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-medium text-gray-900 mb-4">Document Checklist</h3>
-                        <p className="text-gray-600 mb-4">
-                          Check the documents you already have available:
-                        </p>
-                        
-                        <ul className="space-y-4">
-                          {selectedScheme.documents.map((doc: string, index: number) => (
-                            <li key={index} className="flex items-center gap-4">
-                              <Checkbox 
-                                id={`doc-${index}`} 
-                                checked={availableDocuments.includes(doc)}
-                                onCheckedChange={() => toggleDocument(doc)}
-                              />
-                              <div className="flex-1">
-                                <Label 
-                                  htmlFor={`doc-${index}`}
-                                  className={`font-medium ${availableDocuments.includes(doc) ? 'text-bloom-purple line-through' : 'text-gray-900'}`}
-                                >
-                                  {doc}
-                                </Label>
-                                <p className="text-sm text-gray-500">
-                                  Make sure your {doc} is valid and not expired.
-                                </p>
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      
-                      {documentStatus && (
-                        <div className={`p-4 rounded-lg ${
-                          documentStatus.status === 'complete' ? 'bg-green-50 border border-green-200' :
-                          documentStatus.status === 'almost' ? 'bg-blue-50 border border-blue-200' :
-                          documentStatus.status === 'partial' ? 'bg-yellow-50 border border-yellow-200' :
-                          'bg-red-50 border border-red-200'
-                        }`}>
-                          <h3 className={`font-medium ${
-                            documentStatus.status === 'complete' ? 'text-green-800' :
-                            documentStatus.status === 'almost' ? 'text-blue-800' :
-                            documentStatus.status === 'partial' ? 'text-yellow-800' :
-                            'text-red-800'
-                          }`}>
-                            Document Status
-                          </h3>
-                          <p className="text-gray-700">
-                            {documentStatus.message}
-                          </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">Required Documents</h3>
+                          <ul className="space-y-4">
+                            {selectedScheme.documents.map((doc: string, index: number) => (
+                              <li key={index} className="flex items-center gap-4">
+                                <Checkbox 
+                                  id={`doc-${index}`} 
+                                  checked={availableDocuments.includes(doc)}
+                                  onCheckedChange={() => toggleDocument(doc)}
+                                />
+                                <div className="flex-1">
+                                  <Label 
+                                    htmlFor={`doc-${index}`}
+                                    className={`font-medium ${availableDocuments.includes(doc) ? 'text-bloom-purple line-through' : 'text-gray-900'}`}
+                                  >
+                                    {doc}
+                                  </Label>
+                                  <p className="text-sm text-gray-500">
+                                    Make sure your {doc} is valid and not expired.
+                                  </p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                          
+                          {documentStatus && (
+                            <div className={`mt-6 p-4 rounded-lg ${
+                              documentStatus.status === 'complete' ? 'bg-green-50 border border-green-200' :
+                              documentStatus.status === 'almost' ? 'bg-blue-50 border border-blue-200' :
+                              documentStatus.status === 'partial' ? 'bg-yellow-50 border border-yellow-200' :
+                              'bg-red-50 border border-red-200'
+                            }`}>
+                              <h3 className={`font-medium ${
+                                documentStatus.status === 'complete' ? 'text-green-800' :
+                                documentStatus.status === 'almost' ? 'text-blue-800' :
+                                documentStatus.status === 'partial' ? 'text-yellow-800' :
+                                'text-red-800'
+                              }`}>
+                                Document Status
+                              </h3>
+                              <p className="text-gray-700">
+                                {documentStatus.message}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
+                        
+                        <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-4">AI Document Verification</h3>
+                          <DocumentUploader onFilesUploaded={handleFileUpload} />
+                          
+                          {uploadedFiles.length > 0 && (
+                            <div className="mt-4">
+                              <h4 className="font-medium text-gray-900 mb-2">Uploaded Documents</h4>
+                              <ul className="space-y-2">
+                                {uploadedFiles.map((file, index) => (
+                                  <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                                    <FileText className="h-4 w-4 text-bloom-purple" />
+                                    {file.name}
+                                  </li>
+                                ))}
+                              </ul>
+                              
+                              <Button 
+                                onClick={handleVerifyDocuments}
+                                disabled={verificationStatus === "verifying"} 
+                                className="mt-4 bg-bloom-purple hover:bg-bloom-purple-dark"
+                              >
+                                {verificationStatus === "verifying" 
+                                  ? "Verifying..." 
+                                  : verificationStatus === "complete" 
+                                    ? "Verify Again" 
+                                    : "Verify Documents"
+                                }
+                              </Button>
+                            </div>
+                          )}
+                          
+                          {verificationResults && (
+                            <DocumentVerifier results={verificationResults} />
+                          )}
+                        </div>
+                      </div>
                       
                       <div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">Application Process</h3>
                         <ol className="space-y-3 ml-6 list-decimal">
                           <li className="text-gray-700">Gather all the required documents listed above</li>
-                          <li className="text-gray-700">Visit the official website or nearest center for application</li>
+                          <li className="text-gray-700">Upload them for AI verification to ensure they're valid</li>
                           <li className="text-gray-700">Fill out the application form with accurate information</li>
-                          <li className="text-gray-700">Upload or submit scanned copies of all documents</li>
-                          <li className="text-gray-700">Submit the application and wait for verification</li>
+                          <li className="text-gray-700">Submit the application and wait for processing</li>
+                          <li className="text-gray-700">Track your application status through your account</li>
                         </ol>
                       </div>
                       
                       <div className="bg-bloom-peach p-4 rounded-lg">
                         <h3 className="font-medium text-gray-900 mb-1">Pro Tip</h3>
                         <p className="text-gray-700">
-                          Keep digital copies of all your documents in a secure cloud storage for 
-                          easy access. Always check the expiry dates of your identification documents.
+                          Our AI verification system can help detect issues with your documents before submission,
+                          increasing your chances of approval and reducing processing time.
                         </p>
                       </div>
                     </div>
