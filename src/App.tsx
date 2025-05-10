@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import Schemes from "./pages/Schemes";
 import Learn from "./pages/Learn";
 import Community from "./pages/Community";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/schemes" element={<Schemes />} />
             <Route path="/learn" element={<Learn />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
