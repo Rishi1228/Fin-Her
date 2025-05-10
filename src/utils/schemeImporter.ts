@@ -4,6 +4,7 @@
  * 
  * This utility helps import schemes from various data formats.
  */
+import * as XLSX from 'xlsx';
 
 // Define the Scheme interface to match our application's scheme structure
 export interface Scheme {
@@ -77,6 +78,52 @@ export const importFromJSON = (jsonContent: string | object): Scheme[] => {
 };
 
 /**
+ * Import schemes from an Excel file
+ * @param excelBuffer The ArrayBuffer containing the Excel file data
+ */
+export const importFromExcel = (excelBuffer: ArrayBuffer): Scheme[] => {
+  try {
+    // Read the Excel file
+    const workbook = XLSX.read(excelBuffer, { type: 'array' });
+    
+    // Assume the first sheet contains the data
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    
+    // Convert to JSON
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    
+    // Process the data to match our Scheme interface
+    const schemes = jsonData.map((row: any, index) => {
+      // Handle documents array (assuming they're separated by semicolons in the Excel cell)
+      const documents = row.documents ? 
+        (typeof row.documents === 'string' ? row.documents.split(';') : [row.documents.toString()]) : 
+        [];
+      
+      return {
+        id: row.id || index + 1, // Use provided ID or generate one
+        title: row.title || '',
+        category: row.category || '',
+        eligibility: row.eligibility || '',
+        documents: documents,
+        description: row.description || '',
+        benefits: row.benefits || ''
+      } as Scheme;
+    });
+    
+    // Filter out invalid schemes
+    return schemes.filter(scheme => 
+      scheme.title && scheme.category && 
+      scheme.eligibility && scheme.documents.length > 0 && 
+      scheme.description && scheme.benefits
+    );
+  } catch (error) {
+    console.error('Failed to parse Excel file:', error);
+    return [];
+  }
+};
+
+/**
  * Add imported schemes to the existing schemes array
  * This can be replaced with actual DB integration later
  */
@@ -108,4 +155,32 @@ export const exportToCSV = (schemes: Scheme[]): string => {
   });
   
   return [headers, ...rows].join('\n');
+};
+
+/**
+ * Export schemes to Excel format
+ */
+export const exportToExcel = (schemes: Scheme[]): ArrayBuffer => {
+  // Format the data for Excel
+  const excelData = schemes.map(scheme => ({
+    id: scheme.id,
+    title: scheme.title,
+    category: scheme.category,
+    eligibility: scheme.eligibility,
+    documents: scheme.documents.join(';'),
+    description: scheme.description,
+    benefits: scheme.benefits
+  }));
+  
+  // Create a worksheet from the data
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+  
+  // Create a workbook and add the worksheet
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Schemes");
+  
+  // Generate the Excel file
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  
+  return excelBuffer;
 };
