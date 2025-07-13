@@ -1,10 +1,5 @@
 
-/**
- * Document AI Utility
- * 
- * This is a mock implementation that simulates AI document verification.
- * In a real implementation, this would connect to an AI service or API.
- */
+import { supabase } from "@/integrations/supabase/client";
 
 export interface DocumentVerificationResult {
   fileName: string;
@@ -12,52 +7,74 @@ export interface DocumentVerificationResult {
   valid: boolean;
   confidence: number;
   issues?: string[];
+  keyFindings?: string[];
+  recommendations?: string[];
 }
 
 /**
- * Verifies a document using AI
- * Mock implementation - in a real app, this would call an AI service
+ * Converts a file to base64 string
  */
-export const verifyDocument = async (file: File): Promise<DocumentVerificationResult> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-  
-  // Document types we can recognize
-  const documentTypes = [
-    "Aadhaar Card", "PAN Card", "Voter ID", "Passport",
-    "Driving License", "Bank Statement", "Utility Bill",
-    "Birth Certificate", "Income Certificate", "Property Documents"
-  ];
-  
-  // Random verification outcome
-  const valid = Math.random() > 0.3;
-  const confidence = valid ? 0.7 + (Math.random() * 0.3) : 0.3 + (Math.random() * 0.4);
-  
-  // Random document type based on filename patterns
-  let documentType = documentTypes[Math.floor(Math.random() * documentTypes.length)];
-  if (file.name.toLowerCase().includes("aadh")) documentType = "Aadhaar Card";
-  if (file.name.toLowerCase().includes("pan")) documentType = "PAN Card";
-  if (file.name.toLowerCase().includes("passport")) documentType = "Passport";
-  if (file.name.toLowerCase().includes("license")) documentType = "Driving License";
-  if (file.name.toLowerCase().includes("bank") || file.name.toLowerCase().includes("statement")) documentType = "Bank Statement";
-  
-  // Generate random issues for invalid documents
-  const issues = valid ? [] : [
-    "Document appears to be expired",
-    "Poor image quality - text not clearly visible",
-    "Missing signature",
-    "Document appears to be altered",
-    "Required information is missing",
-    "Format not recognized"
-  ].slice(0, 1 + Math.floor(Math.random() * 2));
-  
-  return {
-    fileName: file.name,
-    documentType,
-    valid,
-    confidence,
-    issues: valid ? [] : issues
-  };
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
+/**
+ * Verifies a document using Gemini AI
+ */
+export const verifyDocument = async (file: File, expectedDocumentType?: string): Promise<DocumentVerificationResult> => {
+  try {
+    // Convert file to base64
+    const imageBase64 = await fileToBase64(file);
+    
+    // Call the Supabase Edge Function
+    const { data, error } = await supabase.functions.invoke('verify-document', {
+      body: {
+        imageBase64,
+        fileName: file.name,
+        expectedDocumentType
+      }
+    });
+
+    if (error) {
+      console.error('Error calling verify-document function:', error);
+      throw new Error(`Verification failed: ${error.message}`);
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || 'Document verification failed');
+    }
+
+    const analysis = data.analysis;
+    
+    return {
+      fileName: file.name,
+      documentType: analysis.documentType || 'Unknown Document',
+      valid: analysis.isValid || false,
+      confidence: analysis.confidence || 0,
+      issues: analysis.issues || [],
+      keyFindings: analysis.keyFindings || [],
+      recommendations: analysis.recommendations || []
+    };
+
+  } catch (error) {
+    console.error('Document verification error:', error);
+    
+    // Return error result instead of throwing
+    return {
+      fileName: file.name,
+      documentType: 'Verification Failed',
+      valid: false,
+      confidence: 0,
+      issues: [`Verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`],
+      keyFindings: [],
+      recommendations: ['Please try uploading the document again or contact support']
+    };
+  }
 };
 
 /**
@@ -72,6 +89,11 @@ export const matchDocumentsToRequirements = (
   
   // Try to match each verified document to a requirement
   verificationResults.forEach(doc => {
+    // Skip failed verifications for matching
+    if (!doc.valid) {
+      return;
+    }
+    
     // First try exact matches
     let matched = false;
     
@@ -85,7 +107,7 @@ export const matchDocumentsToRequirements = (
       }
     }
     
-    // If no exact match, try fuzzy match
+    // If no exact match, try fuzzy match for valid documents
     if (!matched) {
       for (const required of requiredDocuments) {
         if (!matchedRequirements.has(required)) {

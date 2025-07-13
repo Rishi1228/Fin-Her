@@ -153,31 +153,57 @@ const Schemes = () => {
     }
     
     setVerificationStatus("verifying");
+    toast.info("Analyzing documents with AI...");
     
-    // Simulate AI verification process
-    setTimeout(() => {
-      const requiredDocs = selectedScheme.documents;
+    try {
+      // Process documents with AI verification
+      const verificationPromises = uploadedFiles.map(async (file, index) => {
+        const expectedType = selectedScheme.documents[index % selectedScheme.documents.length];
+        // Use the real AI verification
+        const { verifyDocument } = await import('@/utils/documentAI');
+        return await verifyDocument(file, expectedType);
+      });
+      
+      const documentAnalyses = await Promise.all(verificationPromises);
+      
+      // Create results in the expected format
       const results = {
-        verified: true,
-        matchedDocuments: uploadedFiles.map((file, index) => ({
-          fileName: file.name,
-          matched: requiredDocs[index % requiredDocs.length],
-          valid: Math.random() > 0.3
-        }))
+        verified: documentAnalyses.some(doc => doc.valid),
+        documents: documentAnalyses
       };
       
       setVerificationResults(results);
       setVerificationStatus("complete");
       
       // Update available documents based on verification
-      const validDocs = results.matchedDocuments
+      const validDocs = documentAnalyses
         .filter(doc => doc.valid)
-        .map(doc => doc.matched);
+        .map(doc => {
+          // Try to match document type to required documents
+          const matchedDoc = selectedScheme.documents.find((req: string) => 
+            doc.documentType.includes(req) || req.includes(doc.documentType)
+          );
+          return matchedDoc || doc.documentType;
+        });
         
       setAvailableDocuments(validDocs);
       
-      toast.success("Document verification completed");
-    }, 2000);
+      const validCount = documentAnalyses.filter(doc => doc.valid).length;
+      const totalCount = documentAnalyses.length;
+      
+      if (validCount === totalCount) {
+        toast.success(`All ${totalCount} documents verified successfully!`);
+      } else if (validCount > 0) {
+        toast.warning(`${validCount} out of ${totalCount} documents verified. Check the results below.`);
+      } else {
+        toast.error("No documents could be verified. Please check the issues and try again.");
+      }
+      
+    } catch (error) {
+      console.error('Verification error:', error);
+      toast.error("Failed to verify documents. Please try again.");
+      setVerificationStatus("idle");
+    }
   };
 
   const getDocumentStatus = () => {
@@ -239,7 +265,7 @@ const Schemes = () => {
               </TabsTrigger>
               <TabsTrigger value="documents" className="text-base md:text-lg py-2 md:py-3">
                 <FileCheck className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                Document Verification
+                AI Document Verification
               </TabsTrigger>
             </TabsList>
             
@@ -378,7 +404,7 @@ const Schemes = () => {
                     <div className="flex items-center justify-between flex-wrap gap-4">
                       <div>
                         <CardTitle className="text-xl text-bloom-purple-dark">{selectedScheme.title}</CardTitle>
-                        <CardDescription>Document verification guide</CardDescription>
+                        <CardDescription>AI-powered document verification</CardDescription>
                       </div>
                       <Badge className="bg-bloom-teal hover:bg-bloom-teal">{selectedScheme.category}</Badge>
                     </div>
@@ -435,6 +461,19 @@ const Schemes = () => {
                         
                         <div>
                           <h3 className="text-lg font-medium text-gray-900 mb-4">AI Document Verification</h3>
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <div className="flex items-start gap-2">
+                              <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                              <div className="text-sm">
+                                <p className="font-medium text-blue-800">Powered by Gemini AI</p>
+                                <p className="text-blue-700 mt-1">
+                                  Our advanced AI analyzes your documents for authenticity, quality, and completeness 
+                                  to ensure they meet verification standards.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          
                           <DocumentUploader onFilesUploaded={handleFileUpload} />
                           
                           {uploadedFiles.length > 0 && (
@@ -455,10 +494,10 @@ const Schemes = () => {
                                 className="mt-4 bg-bloom-purple hover:bg-bloom-purple-dark"
                               >
                                 {verificationStatus === "verifying" 
-                                  ? "Verifying..." 
+                                  ? "AI is analyzing documents..." 
                                   : verificationStatus === "complete" 
-                                    ? "Verify Again" 
-                                    : "Verify Documents"
+                                    ? "Verify Documents Again" 
+                                    : "Verify Documents with AI"
                                 }
                               </Button>
                             </div>
