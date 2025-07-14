@@ -217,6 +217,16 @@ const SCHEMES = [
     benefits: "Free LPG connection, EMI facility for cylinders and stoves.",
     applicationLink: "https://www.pmujjwalayojana.com/"
   }
+  {
+    id: 21,
+    title: "National Scheme of Incentive to Girls for Secondary Education (NSIGSE)",
+    category: "Education",
+    eligibility: "Girls from SC/ST communities and Kasturba Gandhi Balika Vidyalayas who pass class VIII and enroll in class IX in Government schools.",
+    documents: ["Aadhaar Card", "Bank Account Details", "Caste certificate (for SC/ST)", "Class 8 pass certificate", "School enrollment proof (Class IX)"],
+    description: "Incentive scheme promoting secondary education for underprivileged girl students.",
+    benefits: "Rs. 3000/- fixed deposit, accessible at age 18 after passing Class X.
+    applicationLink: "https://scholarships.gov.in/"
+  }
 ];
 
 // Categories
