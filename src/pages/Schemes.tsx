@@ -11,9 +11,8 @@ import { Search, FileCheck, FileText, Upload, AlertCircle, ExternalLink } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/ui/sonner";
-import DocumentUploader from "@/components/DocumentUploader";
-import DocumentVerifier from "@/components/DocumentVerifier";
+import { toast } from "@/hooks/use-toast";
+import DocumentUploadItem from "@/components/DocumentUploadItem";
 
 // Expanded mock data for schemes with more variety
 const SCHEMES = [
@@ -216,7 +215,7 @@ const SCHEMES = [
     description: "Free LPG connections to women from Below Poverty Line households.",
     benefits: "Free LPG connection, EMI facility for cylinders and stoves.",
     applicationLink: "https://www.pmujjwalayojana.com/"
-  }
+  },
   {
     id: 21,
     title: "National Scheme of Incentive to Girls for Secondary Education (NSIGSE)",
@@ -224,7 +223,7 @@ const SCHEMES = [
     eligibility: "Girls from SC/ST communities and Kasturba Gandhi Balika Vidyalayas who pass class VIII and enroll in class IX in Government schools.",
     documents: ["Aadhaar Card", "Bank Account Details", "Caste certificate (for SC/ST)", "Class 8 pass certificate", "School enrollment proof (Class IX)"],
     description: "Incentive scheme promoting secondary education for underprivileged girl students.",
-    benefits: "Rs. 3000/- fixed deposit, accessible at age 18 after passing Class X.
+    benefits: "Rs. 3000/- fixed deposit, accessible at age 18 after passing Class X.",
     applicationLink: "https://scholarships.gov.in/"
   }
 ];
@@ -284,68 +283,30 @@ const Schemes = () => {
     }
   };
 
-  const handleFileUpload = (files: File[]) => {
-    setUploadedFiles(prev => [...prev, ...files]);
-    toast.success(`${files.length} document${files.length > 1 ? 's' : ''} uploaded successfully`);
+  const handleDocumentUpload = (documentType: string, uploadData: any) => {
+    // Handle successful document upload
+    toast({
+      title: "Upload Successful",
+      description: `${documentType} uploaded successfully`,
+    });
   };
 
-  const handleVerifyDocuments = async () => {
-    if (uploadedFiles.length === 0 || !selectedScheme) {
-      toast.error("Please upload documents and select a scheme first");
-      return;
-    }
-    
-    setVerificationStatus("verifying");
-    toast.info("Analyzing documents with Gemini AI...");
-    
-    try {
-      // Process documents with AI verification
-      const verificationPromises = uploadedFiles.map(async (file, index) => {
-        const expectedType = selectedScheme.documents[index % selectedScheme.documents.length];
-        // Use the real AI verification
-        const { verifyDocument } = await import('@/utils/documentAI');
-        return await verifyDocument(file, expectedType);
+  const handleDocumentVerification = (documentType: string, verificationData: any) => {
+    // Handle verification completion
+    if (verificationData.valid) {
+      setAvailableDocuments(prev => 
+        prev.includes(documentType) ? prev : [...prev, documentType]
+      );
+      toast({
+        title: "Verification Successful",
+        description: `${documentType} verified successfully`,
       });
-      
-      const documentAnalyses = await Promise.all(verificationPromises);
-      
-      // Create results in the expected format
-      const results = {
-        verified: documentAnalyses.some(doc => doc.valid),
-        documents: documentAnalyses
-      };
-      
-      setVerificationResults(results);
-      setVerificationStatus("complete");
-      
-      // Update available documents based on verification
-      const validDocs = documentAnalyses
-        .filter(doc => doc.valid)
-        .map(doc => {
-          // Try to match document type to required documents
-          const matchedDoc = selectedScheme.documents.find((req: string) => 
-            doc.documentType.includes(req) || req.includes(doc.documentType)
-          );
-          return matchedDoc || doc.documentType;
-        });
-        
-      setAvailableDocuments(validDocs);
-      
-      const validCount = documentAnalyses.filter(doc => doc.valid).length;
-      const totalCount = documentAnalyses.length;
-      
-      if (validCount === totalCount) {
-        toast.success(`All ${totalCount} documents verified successfully!`);
-      } else if (validCount > 0) {
-        toast.warning(`${validCount} out of ${totalCount} documents verified. Check the results below.`);
-      } else {
-        toast.error("No documents could be verified. Please check the issues and try again.");
-      }
-      
-    } catch (error) {
-      console.error('Verification error:', error);
-      toast.error("Failed to verify documents. Please try again.");
-      setVerificationStatus("idle");
+    } else {
+      toast({
+        title: "Verification Failed",
+        description: `${documentType} verification failed`,
+        variant: "destructive"
+      });
     }
   };
 
@@ -616,51 +577,30 @@ const Schemes = () => {
                         
                         <div>
                           <h3 className="text-lg font-medium text-gray-900 mb-4">Upload & Verify Documents</h3>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <div className="flex items-start gap-2">
                               <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
                               <div className="text-sm">
                                 <p className="font-medium text-blue-800">Powered by Gemini AI</p>
                                 <p className="text-blue-700 mt-1">
-                                  Our AI analyzes your documents for authenticity and quality to prevent fraud
-                                  and ensure they meet verification standards before application.
+                                  Upload each document individually and verify it with AI to ensure authenticity
+                                  and quality before application.
                                 </p>
                               </div>
                             </div>
                           </div>
                           
-                          <DocumentUploader onFilesUploaded={handleFileUpload} />
-                          
-                          {uploadedFiles.length > 0 && (
-                            <div className="mt-4">
-                              <h4 className="font-medium text-gray-900 mb-2">Uploaded Documents</h4>
-                              <ul className="space-y-2">
-                                {uploadedFiles.map((file, index) => (
-                                  <li key={index} className="flex items-center gap-2 text-sm text-gray-700">
-                                    <FileText className="h-4 w-4 text-bloom-purple" />
-                                    {file.name}
-                                  </li>
-                                ))}
-                              </ul>
-                              
-                              <Button 
-                                onClick={handleVerifyDocuments}
-                                disabled={verificationStatus === "verifying"} 
-                                className="mt-4 bg-bloom-purple hover:bg-bloom-purple-dark"
-                              >
-                                {verificationStatus === "verifying" 
-                                  ? "AI is analyzing documents..." 
-                                  : verificationStatus === "complete" 
-                                    ? "Verify Documents Again" 
-                                    : "Verify Documents with AI"
-                                }
-                              </Button>
-                            </div>
-                          )}
-                          
-                          {verificationResults && (
-                            <DocumentVerifier results={verificationResults} />
-                          )}
+                          <div className="space-y-4">
+                            {selectedScheme.documents.map((documentType: string, index: number) => (
+                              <DocumentUploadItem
+                                key={`${selectedScheme.id}-${documentType}-${index}`}
+                                documentType={documentType}
+                                schemeId={selectedScheme.id}
+                                onUploadComplete={handleDocumentUpload}
+                                onVerificationComplete={handleDocumentVerification}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
                       
