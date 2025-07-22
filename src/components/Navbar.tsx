@@ -38,7 +38,11 @@ const Navbar = () => {
         <div className="hidden md:flex items-center space-x-8">
           <Link to="/" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Home</Link>
           <Link to="/schemes" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Schemes</Link>
+          <Link to="/tools" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Tools</Link>
           <Link to="/learn" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Learn</Link>
+          <Link to="/progress" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Progress</Link>
+          <Link to="/blog" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Blog</Link>
+          <Link to="/webinars" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Webinars</Link>
           <Link to="/community" className="text-gray-700 hover:text-bloom-purple font-medium transition-colors">Community</Link>
         </div>
         

@@ -12,6 +12,10 @@ import Schemes from "./pages/Schemes";
 import Learn from "./pages/Learn";
 import Community from "./pages/Community";
 import AdminDashboard from "./pages/AdminDashboard";
+import FinancialTools from "./pages/FinancialTools";
+import ProgressTracking from "./pages/Progress";
+import Blog from "./pages/Blog";
+import Webinars from "./pages/Webinars";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +33,10 @@ const App = () => (
             <Route path="/learn" element={<Learn />} />
             <Route path="/community" element={<Community />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/tools" element={<FinancialTools />} />
+            <Route path="/progress" element={<ProgressTracking />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/webinars" element={<Webinars />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
