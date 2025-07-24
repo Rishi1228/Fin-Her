@@ -575,7 +575,7 @@ const Schemes = () => {
                           )}
                         </div>
                         
-                        <div>
+{/*                         <div>
                           <h3 className="text-lg font-medium text-gray-900 mb-4">Upload & Verify Documents</h3>
                           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                             <div className="flex items-start gap-2">
@@ -588,7 +588,7 @@ const Schemes = () => {
                                 </p>
                               </div>
                             </div>
-                          </div>
+                          </div> */}
                           
                           <div className="space-y-4">
                             {selectedScheme.documents.map((documentType: string, index: number) => (
