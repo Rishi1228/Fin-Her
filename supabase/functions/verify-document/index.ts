@@ -14,7 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    const { imageBase64, fileName, expectedDocumentType } = await req.json();
+    console.log('Verify document function called');
+    
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+    
+    const { imageBase64, fileName, expectedDocumentType } = requestBody;
+    console.log('Request parsed successfully, fileName:', fileName);
     
     if (!imageBase64) {
       return new Response(
@@ -31,10 +45,15 @@ serve(async (req) => {
       );
     }
 
-    // Clean the base64 string
+    // Clean the base64 string and detect MIME type
+    const mimeTypeMatch = imageBase64.match(/^data:image\/([a-z]+);base64,/);
+    const detectedMimeType = mimeTypeMatch ? `image/${mimeTypeMatch[1]}` : 'image/jpeg';
     const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    
+    console.log('Detected MIME type:', detectedMimeType);
+    console.log('Base64 data length:', base64Data.length);
 
-    const prompt = `Analyze this document image and provide a detailed verification report. 
+    const prompt = `Analyze this document image and provide a detailed verification report.
 
 Document Context:
 - File name: ${fileName}
@@ -69,7 +88,7 @@ Be thorough but concise in your analysis.`;
             { text: prompt },
             {
               inline_data: {
-                mime_type: "image/jpeg",
+                mime_type: detectedMimeType,
                 data: base64Data
               }
             }
