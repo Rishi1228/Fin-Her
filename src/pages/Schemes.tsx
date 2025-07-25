@@ -575,21 +575,7 @@ const Schemes = () => {
                           )}
                         </div>
                         
-{/*                         <div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-4">Upload & Verify Documents</h3>
-                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                            <div className="flex items-start gap-2">
-                              <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0 mt-0.5" />
-                              <div className="text-sm">
-                                <p className="font-medium text-blue-800">Powered by Gemini AI</p>
-                                <p className="text-blue-700 mt-1">
-                                  Upload each document individually and verify it with AI to ensure authenticity
-                                  and quality before application.
-                                </p>
-                              </div>
-                            </div>
-                          </div> */}
-                          
+                        <div>
                           <div className="space-y-4">
                             {selectedScheme.documents.map((documentType: string, index: number) => (
                               <DocumentUploadItem
