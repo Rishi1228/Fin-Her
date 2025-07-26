@@ -271,7 +271,7 @@ const SchemeSearch = () => {
                         <SelectValue placeholder="Select age group" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any age</SelectItem>
+                        <SelectItem value="any">Any age</SelectItem>
                         {AGE_GROUPS.map((age) => (
                           <SelectItem key={age} value={age}>{age}</SelectItem>
                         ))}
@@ -288,7 +288,7 @@ const SchemeSearch = () => {
                         <SelectValue placeholder="Select income range" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any income</SelectItem>
+                        <SelectItem value="any">Any income</SelectItem>
                         {INCOME_RANGES.map((income) => (
                           <SelectItem key={income} value={income}>{income}</SelectItem>
                         ))}
