@@ -416,6 +416,7 @@ const Schemes = () => {
                           <SelectValue placeholder="Select age group" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="any">Any age</SelectItem>
                           {AGE_GROUPS.map((age) => (
                             <SelectItem key={age} value={age}>{age}</SelectItem>
                           ))}
@@ -430,6 +431,7 @@ const Schemes = () => {
                           <SelectValue placeholder="Select income range" />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="any">Any income</SelectItem>
                           {INCOME_RANGES.map((income) => (
                             <SelectItem key={income} value={income}>{income}</SelectItem>
                           ))}
