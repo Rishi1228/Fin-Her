@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { useNavigate } from "react-router-dom";
 
 const educationResources = [
   {
@@ -26,6 +27,8 @@ const educationResources = [
 ];
 
 const EducationPreview = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
@@ -38,7 +41,10 @@ const EducationPreview = () => {
               Curated resources to build your financial knowledge at your own pace.
             </p>
           </div>
-          <Button className="mt-4 md:mt-0 bg-bloom-purple hover:bg-bloom-purple-dark">
+          <Button 
+            className="mt-4 md:mt-0 bg-bloom-purple hover:bg-bloom-purple-dark"
+            onClick={() => navigate('/learn')}
+          >
             Explore All Resources
           </Button>
         </div>
@@ -63,7 +69,11 @@ const EducationPreview = () => {
                 <p className="text-gray-600">{resource.description}</p>
               </CardContent>
               <CardFooter>
-                <Button variant="outline" className="border-bloom-purple text-bloom-purple hover:bg-bloom-purple hover:text-white w-full">
+                <Button 
+                  variant="outline" 
+                  className="border-bloom-purple text-bloom-purple hover:bg-bloom-purple hover:text-white w-full"
+                  onClick={() => navigate('/learn')}
+                >
                   Read Now
                 </Button>
               </CardFooter>
