@@ -32,7 +32,7 @@ const Navbar = () => {
           <div className="w-10 h-10 rounded-full bg-gradient-to-r from-bloom-purple-light to-bloom-purple flex items-center justify-center">
             <span className="text-white font-bold text-lg">SB</span>
           </div>
-          <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">She-Invest Bloom</span>
+          <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">Fin-Her</span>
         </Link>
         
         <div className="hidden md:flex items-center space-x-8">

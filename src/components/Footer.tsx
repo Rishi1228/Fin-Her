@@ -12,7 +12,7 @@ const Footer = () => {
               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-bloom-purple-light to-bloom-purple flex items-center justify-center">
                 <span className="text-white font-bold text-lg">SB</span>
               </div>
-              <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">She-Invest Bloom</span>
+              <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">Fin-Her</span>
             </Link>
             <p className="text-gray-600 mb-4">
               Empowering women on their journey to financial independence and prosperity.
@@ -117,7 +117,7 @@ const Footer = () => {
         
         <div className="mt-12 pt-8 border-t border-gray-200">
           <p className="text-center text-gray-500 text-sm">
-            © {new Date().getFullYear()} She-Invest Bloom. All rights reserved.
+            © {new Date().getFullYear()} Fin-Her. All rights reserved.
           </p>
         </div>
       </div>
