@@ -30,7 +30,7 @@ const Navbar = () => {
     <nav className="bg-white shadow-sm py-4 px-6 md:px-10">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-lg">
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-lg">
             <img src={finHerLogo} alt="Fin-Her Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">Fin-Her</span>

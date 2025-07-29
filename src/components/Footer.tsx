@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           <div className="col-span-1 md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-4">
-              <div className="w-10 h-10 rounded-full overflow-hidden bg-white shadow-lg">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-lg">
                 <img src={finHerLogo} alt="Fin-Her Logo" className="w-full h-full object-cover" />
               </div>
               <span className="font-heading font-semibold text-xl tracking-tight text-bloom-purple">Fin-Her</span>
