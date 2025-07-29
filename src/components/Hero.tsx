@@ -33,11 +33,10 @@ const Hero = () => {
             <div className="relative w-full h-[200px] xs:h-[250px] sm:h-[300px] md:h-[350px] max-w-md md:max-w-full">
               {/* Decorative Circles */}
               <div className="absolute -top-4 -left-4 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-bloom-coral rounded-full opacity-50 z-0"></div>
-              <div className="absolute -bottom-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-bloom-teal rounded-full opacity-30 z-0"></div>
-              
+              <div className="absolute -bottom-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-bloom-teal rounded-full opacity-30 z-0"></div>             
               <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2076&q=80"
-                alt="Women supporting each other financially"
+                src="https://github.com/Rishi1228/she-invest-bloom/raw/main/ChatGPT%20Image%20Jul%2029%2C%202025%2C%2002_22_48%20PM.png"
+                alt="Women learning and happy using phones in diverse settings"
                 className="rounded-2xl shadow-xl object-cover w-full h-full inset-0 absolute z-10"
               />
             </div>
