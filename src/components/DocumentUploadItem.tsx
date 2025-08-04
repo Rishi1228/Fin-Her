@@ -236,7 +236,7 @@ const DocumentUploadItem = ({
             <div>
               <input
                 type="file"
-                accept="image/*,.pdf"
+                accept=".pdf,.jpg,.jpeg,.png"
                 onChange={handleFileUpload}
                 disabled={isUploading}
                 className="hidden"
