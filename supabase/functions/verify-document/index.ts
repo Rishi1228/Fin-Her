@@ -53,29 +53,31 @@ serve(async (req) => {
     console.log('Detected MIME type:', detectedMimeType);
     console.log('Base64 data length:', base64Data.length);
 
-    const prompt = `Analyze this document image and provide a detailed verification report.
+    const prompt = `Analyze the provided document image and provide a detailed verification report.
+
+Your response must be ONLY a valid JSON object. Do not include any additional text, markdown, or explanations outside of the JSON object itself. The JSON must adhere to the following structure:
+
+{
+  "documentType": "string",
+  "isValid": "boolean",
+  "confidence": "number (0-1)",
+  "issues": "array of strings",
+  "keyFindings": "array of strings",
+  "recommendations": "array of strings"
+}
+
+Based on your analysis, fill in the values for the keys provided above.
 
 Document Context:
 - File name: ${fileName}
 - Expected document type: ${expectedDocumentType || 'Unknown'}
 
-Please analyze and respond with a JSON object containing:
-1. "documentType": The type of document you identify (e.g., "Aadhaar Card", "PAN Card", "Passport", "Driving License", "Bank Statement", etc.)
-2. "isValid": boolean - whether the document appears legitimate and authentic
-3. "confidence": number between 0-1 indicating your confidence in the analysis
-4. "issues": array of strings listing any problems found (empty array if none)
-5. "keyFindings": array of strings describing what you observed that supports your assessment
-6. "recommendations": array of strings with suggestions for improvement if any issues found
-
-Focus on:
-- Document authenticity (signs of tampering, forgery, or alteration)
-- Image quality and readability
-- Presence of required elements (signatures, seals, watermarks, etc.)
-- Text clarity and consistency
-- Overall document condition
-- Security features if visible
-
-Be thorough but concise in your analysis.`;
+Please focus on:
+- Document authenticity (any signs of tampering, forgery, or alteration).
+- Image quality and readability.
+- Presence of required elements (signatures, seals, watermarks, etc.).
+- Text clarity and consistency.
+- Overall document condition and security features.`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
