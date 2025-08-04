@@ -35,8 +35,8 @@ const Hero = () => {
               <div className="absolute -top-4 -left-4 w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-bloom-coral rounded-full opacity-50 z-0"></div>
               <div className="absolute -bottom-4 -right-4 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-bloom-teal rounded-full opacity-30 z-0"></div>             
               <img
-                src="https://raw.githubusercontent.com/Rishi1228/she-invest-bloom/main/ChatGPT%20Image%20Jul%2029%2C%202025%2C%2002_22_48%20PM.png"
-                alt="Women learning and happy using phones in diverse settings"
+                src="/lovable-uploads/9d8b7eb6-c26c-4dc8-901b-5e0486c37a07.png"
+                alt="Professional woman using mobile phone for financial empowerment"
                 className="rounded-2xl shadow-xl object-cover w-full h-full inset-0 absolute z-10"
               />
             </div>
