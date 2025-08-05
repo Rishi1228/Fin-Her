@@ -108,8 +108,15 @@ Please focus on:
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Gemini API Error:', errorText);
+      console.error('Response status:', response.status);
+      console.error('Response headers:', response.headers);
       return new Response(
-        JSON.stringify({ error: 'Failed to analyze document', details: errorText }),
+        JSON.stringify({ 
+          error: 'Failed to analyze document with Gemini API', 
+          details: errorText,
+          status: response.status,
+          geminiError: true
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -144,8 +151,13 @@ Please focus on:
       }
     } catch (parseError) {
       console.error('Error parsing AI response:', parseError);
+      console.error('Raw AI response:', data?.candidates?.[0]?.content?.parts?.[0]?.text);
       return new Response(
-        JSON.stringify({ error: 'Failed to parse AI analysis' }),
+        JSON.stringify({ 
+          error: 'Failed to parse AI analysis', 
+          details: parseError.message,
+          rawResponse: data?.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0, 500)
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -164,8 +176,14 @@ Please focus on:
 
   } catch (error) {
     console.error('Error in verify-document function:', error);
+    console.error('Error stack:', error.stack);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: error.message }),
+      JSON.stringify({ 
+        error: 'Internal server error', 
+        details: error.message,
+        type: error.name,
+        stack: error.stack?.substring(0, 500)
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

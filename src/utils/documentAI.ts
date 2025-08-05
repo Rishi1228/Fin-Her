@@ -32,6 +32,8 @@ export const verifyDocument = async (file: File, expectedDocumentType?: string):
     const imageBase64 = await fileToBase64(file);
     
     // Call the Supabase Edge Function
+    console.log('Calling verify-document function for:', file.name);
+    
     const { data, error } = await supabase.functions.invoke('verify-document', {
       body: {
         imageBase64,
@@ -40,9 +42,21 @@ export const verifyDocument = async (file: File, expectedDocumentType?: string):
       }
     });
 
+    console.log('Function response:', { data, error });
+
     if (error) {
       console.error('Error calling verify-document function:', error);
-      throw new Error(`Verification failed: ${error.message}`);
+      
+      // Enhanced error message with more details
+      let errorMessage = 'Verification failed';
+      if (error.message) {
+        errorMessage += `: ${error.message}`;
+      }
+      if (error.details) {
+        errorMessage += ` (${error.details})`;
+      }
+      
+      throw new Error(errorMessage);
     }
 
     if (!data.success) {

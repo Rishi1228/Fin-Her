@@ -106,7 +106,18 @@ const DocumentUploadItem = ({
     try {
       // Download the file for verification
       const response = await fetch(uploadedDoc.file_url);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch document: ${response.status} ${response.statusText}`);
+      }
+      
       const blob = await response.blob();
+      
+      // Validate that we actually got an image or PDF
+      if (!blob.type.startsWith('image/') && blob.type !== 'application/pdf') {
+        throw new Error(`Invalid file type received: ${blob.type}. Expected image or PDF.`);
+      }
+      
       const file = new File([blob], uploadedDoc.file_name, { type: blob.type });
 
       // Verify with Gemini AI
@@ -147,9 +158,25 @@ const DocumentUploadItem = ({
 
     } catch (error) {
       console.error('Verification error:', error);
+      
+      let errorMessage = "Failed to verify document.";
+      
+      if (error instanceof Error) {
+        // Check if it's a specific API error
+        if (error.message.includes('Failed to fetch document')) {
+          errorMessage = "Cannot access the uploaded document. Please try uploading again.";
+        } else if (error.message.includes('Invalid file type')) {
+          errorMessage = error.message;
+        } else if (error.message.includes('Gemini API')) {
+          errorMessage = "AI service error. Please try again later.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Verification Failed",
-        description: error instanceof Error ? error.message : "Failed to verify document.",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
