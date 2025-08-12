@@ -79,6 +79,8 @@ const DocumentUploadItem = ({
 
       if (dbError) throw dbError;
 
+      console.log("db data = ", dbData)
+
       setUploadedDoc(dbData);
       onUploadComplete?.(documentType, dbData);
       
