@@ -141,6 +141,7 @@ const SchemeSearch = () => {
 
   const handleDocumentUpload = (documentType: string, uploadData: any) => {
     // Handle successful document upload
+    console.log("In handle document upload");
     toast({
       title: "Upload Successful",
       description: `${documentType} uploaded successfully`,
