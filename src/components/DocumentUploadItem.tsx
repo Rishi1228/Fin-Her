@@ -34,7 +34,7 @@ const DocumentUploadItem = ({
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    console.log("in handle file upload in documentuploaditem.tsx")
+    console.log("in handle file upload in documentuploaditem.tsx", file)
     if (!file) return;
 
     setIsUploading(true);
