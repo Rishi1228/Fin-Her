@@ -149,6 +149,8 @@ const SchemeSearch = () => {
 
   const handleDocumentVerification = (documentType: string, verificationData: any) => {
     // Handle verification completion
+    console.log("In handle document verification");
+    console.log("Verification data = ", verificationData);
     if (verificationData.valid) {
       setAvailableDocuments(prev => 
         prev.includes(documentType) ? prev : [...prev, documentType]
