@@ -102,6 +102,7 @@ const DocumentUploadItem = ({
   };
 
   const handleVerifyDocument = async () => {
+    console.log("in handleVerifyDoc in documentUploadItem.tsx")
     if (!uploadedDoc) return;
 
     setIsVerifying(true);
