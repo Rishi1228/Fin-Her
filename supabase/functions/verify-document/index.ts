@@ -9,6 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   // Handle CORS preflight requests
+  console.log("in verify doc in supabase")
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
