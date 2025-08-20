@@ -49,7 +49,7 @@ serve(async (req) => {
     // Clean the base64 string and detect MIME type
     const mimeTypeMatch = imageBase64.match(/^data:([^;]+);base64,/);
     let detectedMimeType = 'image/jpeg'; // default
-    
+    console.log("mimetypeMatch", mimetypeMatch);
     if (mimeTypeMatch) {
       const fullMimeType = mimeTypeMatch[1];
       // Check if it's a PDF
