@@ -47,9 +47,28 @@ serve(async (req) => {
     }
 
     // Clean the base64 string and detect MIME type
-    const mimeTypeMatch = imageBase64.match(/^data:image\/([a-z]+);base64,/);
-    const detectedMimeType = mimeTypeMatch ? `image/${mimeTypeMatch[1]}` : 'image/jpeg';
-    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    const mimeTypeMatch = imageBase64.match(/^data:([^;]+);base64,/);
+    let detectedMimeType = 'image/jpeg'; // default
+    
+    if (mimeTypeMatch) {
+      const fullMimeType = mimeTypeMatch[1];
+      // Check if it's a PDF
+      if (fullMimeType === 'application/pdf') {
+        console.error('PDF files are not supported for AI analysis. Please convert to image format first.');
+        return new Response(
+          JSON.stringify({ 
+            error: 'PDF files are not supported for document verification. Please upload an image of the document instead.' 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
+      // For images, use the detected type
+      if (fullMimeType.startsWith('image/')) {
+        detectedMimeType = fullMimeType;
+      }
+    }
+    
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
     
     console.log('Detected MIME type:', detectedMimeType);
     console.log('Base64 data length:', base64Data.length);
