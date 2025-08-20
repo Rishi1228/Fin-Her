@@ -53,8 +53,8 @@ serve(async (req) => {
     if (mimeTypeMatch) {
       const fullMimeType = mimeTypeMatch[1];
       // Check if it's a PDF
-      if (fullMimeType === 'application/pdf') {
-        console.error('PDF files are not supported for AI analysis. Please convert to image format first.');
+     // if (fullMimeType === 'application/pdf') {
+       // console.error('PDF files are not supported for AI analysis. Please convert to image format first.');
         return new Response(
           JSON.stringify({ 
             error: 'PDF files are not supported for document verification. Please upload an image of the document instead.' 
