@@ -211,7 +211,6 @@ const SchemeSearch = () => {
         <div className="text-center mb-12">
           <h2 className="font-heading font-bold text-3xl md:text-4xl text-bloom-purple-dark mb-4">
             Find the Right Financial Schemes
-            in schemesearch.tsx
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Discover government schemes tailored to your needs and verify 
