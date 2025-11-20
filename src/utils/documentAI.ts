@@ -10,20 +10,28 @@ export interface DocumentVerificationResult {
   recommendations?: string[];
 }
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
+const fileToBase64 = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = error => reject(error);
+    reader.onerror = (error) => reject(error);
   });
+
+const normalizeAnalysis = (analysis: any) => {
+  if (!analysis || typeof analysis !== "object") analysis = {};
+  const documentType = analysis.documentType || analysis.document_type || "Unknown Document";
+  const isValid = typeof analysis.isValid === "boolean" ? analysis.isValid : (typeof analysis.valid === "boolean" ? analysis.valid : false);
+  const confidence = typeof analysis.confidence === "number" ? analysis.confidence : (typeof analysis.confidence_score === "number" ? analysis.confidence_score : 0);
+  const issues = Array.isArray(analysis.issues) ? analysis.issues : (Array.isArray(analysis.issues_list) ? analysis.issues_list : []);
+  const keyFindings = Array.isArray(analysis.keyFindings) ? analysis.keyFindings : (Array.isArray(analysis.key_findings) ? analysis.key_findings : []);
+  const recommendations = Array.isArray(analysis.recommendations) ? analysis.recommendations : (Array.isArray(analysis.recs) ? analysis.recs : []);
+  return { documentType, isValid, confidence, issues, keyFindings, recommendations };
 };
 
 export const verifyDocument = async (file: File, expectedDocumentType?: string): Promise<DocumentVerificationResult> => {
   try {
     const imageBase64 = await fileToBase64(file);
-
-    console.log("Calling verify-document function for:", file.name);
 
     const body = JSON.stringify({
       imageBase64,
@@ -36,50 +44,48 @@ export const verifyDocument = async (file: File, expectedDocumentType?: string):
       headers: { "Content-Type": "application/json" }
     });
 
-    // supabase.functions.invoke returns an object; different SDK versions may return { data, error } or { error, data }
-    // Normal shape: { data, error }
-    const { data, error } = invokeResult as any;
+    const resAny: any = invokeResult;
+    const maybeData = resAny.data ?? resAny;
+    const maybeError = resAny.error ?? resAny?.error;
 
-    console.log("Function response:", { data, error });
-
-    if (error) {
-      console.error("Error calling verify-document function:", error);
-      let errorMessage = "Verification failed";
-      if (error.message) errorMessage += `: ${error.message}`;
-      if (error.details) errorMessage += ` (${error.details})`;
-      throw new Error(errorMessage);
+    if (maybeError) {
+      const msg = typeof maybeError === "string" ? maybeError : (maybeError.message || JSON.stringify(maybeError));
+      throw new Error(`Verification failed: ${msg}`);
     }
 
-    // If the function responded with an HTTP 200 but returned an error payload inside data
-    if (!data || data.error) {
-      const details = data?.details || data?.raw || data?.error || "No details";
-      throw new Error(`Document verification failed: ${details}`);
+    if (!maybeData) {
+      throw new Error("No data returned from verify-document function");
     }
 
-    if (!data.success) {
-      throw new Error(data.error || "Document verification failed");
+    if (maybeData.error) {
+      throw new Error(`Function error: ${maybeData.error}`);
     }
 
-    const analysis = data.analysis || {};
+    if (!maybeData.success) {
+      const detail = maybeData.details || maybeData.raw || JSON.stringify(maybeData);
+      throw new Error(`Document verification unsuccessful: ${detail}`);
+    }
+
+    const analysisRaw = maybeData.analysis ?? {};
+    const analysis = normalizeAnalysis(analysisRaw);
 
     return {
       fileName: file.name,
-      documentType: analysis.documentType || "Unknown Document",
-      valid: Boolean(analysis.isValid || analysis.valid),
+      documentType: analysis.documentType || expectedDocumentType || "Unknown Document",
+      valid: Boolean(analysis.isValid),
       confidence: typeof analysis.confidence === "number" ? analysis.confidence : 0,
-      issues: Array.isArray(analysis.issues) ? analysis.issues : [],
-      keyFindings: Array.isArray(analysis.keyFindings) ? analysis.keyFindings : (Array.isArray(analysis.key_findings) ? analysis.key_findings : []),
-      recommendations: Array.isArray(analysis.recommendations) ? analysis.recommendations : []
+      issues: analysis.issues,
+      keyFindings: analysis.keyFindings,
+      recommendations: analysis.recommendations
     };
-  } catch (error) {
-    console.error("Document verification error:", error);
-
+  } catch (err: any) {
+    const message = err instanceof Error ? err.message : String(err);
     return {
       fileName: file.name,
       documentType: "Verification Failed",
       valid: false,
       confidence: 0,
-      issues: [`Verification failed: ${error instanceof Error ? error.message : String(error)}`],
+      issues: [`Verification failed: ${message}`],
       keyFindings: [],
       recommendations: ["Please try uploading the document again or contact support"]
     };
@@ -93,7 +99,7 @@ export const matchDocumentsToRequirements = (
   const matches: { document: DocumentVerificationResult; requiredType: string }[] = [];
   const matchedRequirements = new Set<string>();
 
-  verificationResults.forEach(doc => {
+  verificationResults.forEach((doc) => {
     if (!doc.valid) return;
 
     let matched = false;
@@ -121,6 +127,6 @@ export const matchDocumentsToRequirements = (
     }
   });
 
-  const missing = requiredDocuments.filter(req => !matchedRequirements.has(req));
+  const missing = requiredDocuments.filter((req) => !matchedRequirements.has(req));
   return { matches, missing };
 };
