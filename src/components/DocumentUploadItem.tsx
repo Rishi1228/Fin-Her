@@ -125,8 +125,9 @@ const DocumentUploadItem = ({
       const file = new File([blob], uploadedDoc.file_name, { type: blob.type });
 
       // Verify with Gemini AI
+      console.log("in handleVerifyDoc in documentUploadItem.tsx before verification result", file);
       const verificationResult = await verifyDocument(file, documentType);
-
+      console.log("in handleVerifyDoc in documentUploadItem.tsx after verification result", verificationResult);
        // Update database with verification result
       const { error: updateError } = await supabase
         .from('user_documents')
