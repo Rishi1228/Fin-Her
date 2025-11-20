@@ -31,6 +31,7 @@ const normalizeAnalysis = (analysis: any) => {
 
 export const verifyDocument = async (file: File, expectedDocumentType?: string): Promise<DocumentVerificationResult> => {
   try {
+    console.log("In verify document utils->documentAI->verifyDocument file:", file);
     const imageBase64 = await fileToBase64(file);
 
     const body = JSON.stringify({
@@ -43,6 +44,7 @@ export const verifyDocument = async (file: File, expectedDocumentType?: string):
       body,
       headers: { "Content-Type": "application/json" }
     });
+    console.log(invokeResult);
 
     const resAny: any = invokeResult;
     const maybeData = resAny.data ?? resAny;
