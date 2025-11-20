@@ -1,76 +1,53 @@
+let serve: any
+if (typeof (globalThis as any).Deno !== "undefined" && typeof (globalThis as any).Deno.serve === "function") {
+  serve = (globalThis as any).Deno.serve.bind((globalThis as any).Deno)
+} else {
+  const mod = await import("https://deno.land/std@0.203.0/http/server.ts")
+  serve = mod.serve
+}
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  console.log("in verify doc in supabase")
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Max-Age": "86400"
+}
+serve(async (req: Request): Promise<Response> => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders, status: 204 })
   try {
-    console.log('Verify document function called');
-    
-    let requestBody;
+    console.log("in verify doc in supabase")
+    let requestBody: any
     try {
-      requestBody = await req.json();
+      requestBody = await req.json()
     } catch (e) {
-      console.error('Error parsing request body:', e);
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      console.error("Error parsing request body:", e)
+      return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 })
     }
-    
-    const { imageBase64, fileName, expectedDocumentType } = requestBody;
-    console.log('Request parsed successfully, fileName:', fileName);
-    
+    const { imageBase64, fileName, expectedDocumentType } = requestBody || {}
+    console.log("Request parsed successfully, fileName:", fileName)
     if (!imageBase64) {
-      return new Response(
-        JSON.stringify({ error: 'Image data is required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      return new Response(JSON.stringify({ error: "Image data is required" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 })
     }
-
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    let geminiApiKey: string | undefined
+    try {
+      geminiApiKey = (globalThis as any)?.Deno?.env?.get?.("GEMINI_API_KEY") || (globalThis as any)?.process?.env?.GEMINI_API_KEY
+    } catch {
+      geminiApiKey = undefined
+    }
     if (!geminiApiKey) {
-      return new Response(
-        JSON.stringify({ error: 'Gemini API key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+      return new Response(JSON.stringify({ error: "Gemini API key not configured" }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 })
     }
-
-    // Clean the base64 string and detect MIME type
-    const mimeTypeMatch = imageBase64.match(/^data:([^;]+);base64,/);
-    let detectedMimeType = 'image/jpeg'; // default
-    console.log("mimeTypeMatch", mimeTypeMatch);
+    const mimeTypeMatch = imageBase64.match(/^data:([^;]+);base64,/)
+    let detectedMimeType = "image/jpeg"
     if (mimeTypeMatch) {
-      const fullMimeType = mimeTypeMatch[1];
-      
-      // Check if it's a PDF
-      if (fullMimeType === 'application/pdf') {
-        console.error('PDF files are not supported for AI analysis. Please convert to image format first.');
-        return new Response(
-          JSON.stringify({ 
-            error: 'PDF files are not supported for document verification. Please upload an image of the document instead.' 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+      const fullMimeType = mimeTypeMatch[1]
+      if (fullMimeType === "application/pdf") {
+        return new Response(JSON.stringify({ error: "PDF files are not supported for document verification. Please upload an image of the document instead." }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 })
       }
-      
-      // For images, use the detected type
-      if (fullMimeType.startsWith('image/')) {
-        detectedMimeType = fullMimeType;
-      }
+      if (fullMimeType.startsWith("image/")) detectedMimeType = fullMimeType
     }
-    
-    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, '');
-    
-    console.log('Detected MIME type:', detectedMimeType);
-    console.log('Base64 data length:', base64Data.length);
-
+    const base64Data = imageBase64.replace(/^data:[^;]+;base64,/, "")
+    console.log("Detected MIME type:", detectedMimeType)
+    console.log("Base64 data length:", base64Data.length)
     const prompt = `Analyze the provided document image and provide a detailed verification report.
 
 Your response must be ONLY a valid JSON object. Do not include any additional text, markdown, or explanations outside of the JSON object itself. The JSON must adhere to the following structure:
@@ -88,7 +65,7 @@ Based on your analysis, fill in the values for the keys provided above.
 
 Document Context:
 - File name: ${fileName}
-- Expected document type: ${expectedDocumentType || 'Unknown'}
+- Expected document type: ${expectedDocumentType || "Unknown"}
 
 Please focus on:
 - Document authenticity (any signs of tampering, forgery, or alteration).
@@ -96,113 +73,70 @@ Please focus on:
 - Presence of required elements (signatures, seals, watermarks, etc.).
 - Text clarity and consistency.
 - Overall document condition and security features.`;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
+    const url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent"
+    const payload = {
+      contents: [
+        {
           parts: [
             { text: prompt },
-            {
-              inline_data: {
-                mime_type: detectedMimeType,
-                data: base64Data
-              }
-            }
+            { inline_data: { mime_type: detectedMimeType, data: base64Data } }
           ]
-        }],
-        generationConfig: {
-          temperature: 0.1,
-          topK: 32,
-          topP: 1,
-          maxOutputTokens: 2048,
-        },
-      }),
-    });
-
+        }
+      ],
+      generationConfig: {
+        temperature: 0.1,
+        topK: 32,
+        topP: 1,
+        maxOutputTokens: 2048
+      }
+    }
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${geminiApiKey}`
+      },
+      body: JSON.stringify(payload)
+    })
+    const rawText = await response.text()
+    console.log("Gemini response status:", response.status)
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Gemini API Error:', errorText);
-      console.error('Response status:', response.status);
-      console.error('Response headers:', response.headers);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to analyze document with Gemini API', 
-          details: errorText,
-          status: response.status,
-          geminiError: true
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+      console.error("Gemini API Error:", rawText)
+      return new Response(JSON.stringify({ error: "Failed to analyze document with Gemini API", details: rawText, status: response.status, geminiError: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 })
     }
-
-    const data = await response.json();
-    
-    if (!data.candidates || !data.candidates[0]?.content?.parts?.[0]?.text) {
-      console.error('Unexpected Gemini response structure:', data);
-      return new Response(
-        JSON.stringify({ error: 'Invalid response from AI service' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    let analysisResult;
+    let data: any
     try {
-      const aiResponse = data.candidates[0].content.parts[0].text;
-      // Try to extract JSON from the response
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        analysisResult = JSON.parse(jsonMatch[0]);
-      } else {
-        // Fallback: parse the text response
+      data = JSON.parse(rawText)
+    } catch {
+      data = { raw: rawText }
+    }
+    const aiText = data?.candidates?.[0]?.content?.parts?.find((p: any) => typeof p.text === "string")?.text || data?.raw || ""
+    if (!aiText) {
+      console.error("Unexpected Gemini response structure:", data)
+      return new Response(JSON.stringify({ error: "Invalid response from AI service", raw: data }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 })
+    }
+    let analysisResult: any
+    try {
+      const jsonMatch = aiText.match(/\{[\s\S]*\}/)
+      if (jsonMatch) analysisResult = JSON.parse(jsonMatch[0])
+      else {
         analysisResult = {
           documentType: expectedDocumentType || "Unknown Document",
-          isValid: aiResponse.toLowerCase().includes('legitimate') || aiResponse.toLowerCase().includes('authentic'),
+          isValid: /authentic|legitimate|valid|genuine/i.test(aiText),
           confidence: 0.7,
-          issues: aiResponse.toLowerCase().includes('issue') ? [aiResponse.substring(0, 200)] : [],
-          keyFindings: [aiResponse.substring(0, 200)],
+          issues: /issue|tamper|forg/i.test(aiText) ? [aiText.substring(0, 200)] : [],
+          keyFindings: [aiText.substring(0, 200)],
           recommendations: []
-        };
+        }
       }
-    } catch (parseError) {
-      console.error('Error parsing AI response:', parseError);
-      console.error('Raw AI response:', data?.candidates?.[0]?.content?.parts?.[0]?.text);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to parse AI analysis', 
-          details: parseError.message,
-          rawResponse: data?.candidates?.[0]?.content?.parts?.[0]?.text?.substring(0, 500)
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    } catch (parseError: any) {
+      console.error("Error parsing AI response:", parseError)
+      console.error("Raw AI response:", aiText)
+      return new Response(JSON.stringify({ error: "Failed to parse AI analysis", details: parseError?.message, rawResponse: aiText?.substring(0, 500) }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 })
     }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        fileName,
-        analysis: analysisResult
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
-
-  } catch (error) {
-    console.error('Error in verify-document function:', error);
-    console.error('Error stack:', error.stack);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error.message,
-        type: error.name,
-        stack: error.stack?.substring(0, 500)
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-    );
+    return new Response(JSON.stringify({ success: true, fileName, analysis: analysisResult }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 })
+  } catch (err: any) {
+    console.error("Error in verify-document function:", err)
+    return new Response(JSON.stringify({ error: "Internal server error", details: err?.message, type: err?.name, stack: err?.stack?.substring(0, 500) }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 })
   }
 });
